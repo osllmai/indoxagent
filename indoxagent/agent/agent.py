@@ -54,6 +54,8 @@ class Agent:
         response = await self.model.ainvoke(messages)
         return self._process_response(response)
 
+
+
     def _process_response(self, response: ModelResponse) -> ModelResponse:
         """
         Process the model response, executing tools if necessary.
@@ -64,7 +66,7 @@ class Agent:
         Returns:
             ModelResponse: Final processed response.
         """
-        if response.tool_calls:
+        if response.tool_calls:  # Ensure OpenAI returned tool calls
             for tool_call in response.tool_calls:
                 tool_name = tool_call.get("function", {}).get("name")
                 tool_args = tool_call.get("function", {}).get("arguments", {})
@@ -72,9 +74,19 @@ class Agent:
                 if tool_name in self.tool_registry:
                     tool_function = self.tool_registry[tool_name]
                     logger.info(f"Executing tool: {tool_name} with args {tool_args}")
-                    tool_output = tool_function(**tool_args)  # Direct function call
-                    response.content += f"\n\nTool [{tool_name}] output: {tool_output}"
+
+                    # ✅ Handle async functions properly
+                    if asyncio.iscoroutinefunction(tool_function):
+                        tool_output = asyncio.run(tool_function(**tool_args))
+                    else:
+                        tool_output = tool_function(**tool_args)
+
+                    # ✅ Replace response content with tool execution output
+                    response.content = f"✅ **Tool [{tool_name}] Output:** {tool_output}"
                 else:
-                    logger.warning(f"Tool {tool_name} not found!")
+                    logger.warning(f"⚠️ Tool {tool_name} not found!")
 
         return response
+
+
+

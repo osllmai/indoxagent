@@ -9,7 +9,7 @@ except ImportError:
     raise ImportError("`firecrawl-py` not installed. Please install using `pip install firecrawl-py`")
 
 
-class FirecrawlTool(Toolkit):
+class FirecrawlTools(Toolkit):
     """
     Firecrawl is a web crawling and scraping tool designed to convert entire websites
     into Large Language Model (LLM)-ready data, such as clean markdown or structured
